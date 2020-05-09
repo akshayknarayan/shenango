@@ -11,8 +11,8 @@ use std::cell::UnsafeCell;
 use std::ffi::CString;
 use std::mem;
 use std::os::raw::{c_int, c_void};
-use std::sync::Arc;
 use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 
 pub mod ffi {
@@ -54,12 +54,12 @@ pub fn preempt_disable() {
 }
 
 #[allow(unused)]
-pub(crate) fn base_init() -> Result<(), i32> {
+pub fn base_init() -> Result<(), i32> {
     convert_error(unsafe { ffi::base_init() })
 }
 
 #[allow(unused)]
-pub(crate) fn base_init_thread() -> Result<(), i32> {
+pub fn base_init_thread() -> Result<(), i32> {
     convert_error(unsafe { ffi::base_init_thread() })
 }
 
@@ -136,14 +136,14 @@ impl SpinLock {
 
     #[inline]
     pub fn lock_np(&self) {
-	preempt_disable();
-	self.lock();
+        preempt_disable();
+        self.lock();
     }
 
     #[inline]
     pub fn unlock_np(&self) {
-	self.unlock();
-	preempt_enable();
+        self.unlock();
+        preempt_enable();
     }
 
     #[inline]
