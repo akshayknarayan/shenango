@@ -31,6 +31,8 @@ CFLAGS += -DMLX4
 endif
 endif
 
+CFLAGS += -Wno-address-of-packed-member -Wno-format-truncation
+
 # handy for debugging
 print-%  : ; @echo $* = $($*)
 
