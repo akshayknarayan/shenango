@@ -6,6 +6,7 @@
 
 #include <base/hash.h>
 #include <base/kref.h>
+#include <base/time.h>
 #include <runtime/smalloc.h>
 #include <runtime/rculist.h>
 #include <runtime/sync.h>
@@ -280,6 +281,74 @@ ssize_t udp_read_from(udpconn_t *c, void *buf, size_t len,
 	/* block until there is an actionable event */
 	while (mbufq_empty(&c->inq) && !c->inq_err && !c->shutdown)
 		waitq_wait(&c->inq_wq, &c->inq_lock);
+
+	/* is the socket drained and shutdown? */
+	if (mbufq_empty(&c->inq) && c->shutdown) {
+		spin_unlock_np(&c->inq_lock);
+		return 0;
+	}
+
+	/* propagate error status code if an error was detected */
+	if (c->inq_err) {
+		spin_unlock_np(&c->inq_lock);
+		return -c->inq_err;
+	}
+
+	/* pop an mbuf and deliver the payload */
+	m = mbufq_pop_head(&c->inq);
+	c->inq_len--;
+	spin_unlock_np(&c->inq_lock);
+
+	ret = min(len, mbuf_length(m));
+	memcpy(buf, mbuf_data(m), ret);
+	if (raddr) {
+		struct ip_hdr *iphdr = mbuf_network_hdr(m, *iphdr);
+		struct udp_hdr *udphdr = mbuf_transport_hdr(m, *udphdr);
+		raddr->ip = ntoh32(iphdr->saddr);
+		raddr->port = ntoh16(udphdr->src_port);
+		if (c->e.match == TRANS_MATCH_5TUPLE) {
+			assert(c->e.raddr.ip == raddr->ip &&
+			       c->e.raddr.port == raddr->port);
+		}
+	}
+	mbuf_free(m);
+	return ret;
+}
+
+/**
+ * udp_read_from_timeout - reads from a UDP socket
+ * @c: the UDP socket
+ * @buf: a buffer to store the datagram
+ * @len: the size of @buf
+ * @raddr: a pointer to store the remote address of the datagram (if not NULL)
+ * @timeout: number of microseconds to wait before giving up.
+ *
+ * WARNING: This a blocking function. It will wait until a datagram is
+ * available, an error occurs, or the socket is shutdown.
+ *
+ * Returns the number of bytes in the datagram, or @len if the datagram
+ * is >= @len in size. If the socket has been shutdown or timeout occurred, returns 0.
+ */
+ssize_t udp_read_from_timeout(udpconn_t *c, void *buf, size_t len,
+                      struct netaddr *raddr, uint64_t timeout)
+{
+	ssize_t ret;
+	struct mbuf *m;
+    uint64_t start, now;
+
+	spin_lock_np(&c->inq_lock);
+
+    start = microtime();
+	/* block until there is an actionable event */
+	while (mbufq_empty(&c->inq) && !c->inq_err && !c->shutdown) {
+        now = microtime();
+        if ((now - start) > timeout) {
+            spin_unlock_np(&c->inq_lock);
+            return 0;
+        }
+
+		waitq_wait(&c->inq_wq, &c->inq_lock);
+    }
 
 	/* is the socket drained and shutdown? */
 	if (mbufq_empty(&c->inq) && c->shutdown) {

@@ -68,6 +68,25 @@ impl UdpConnection {
         .map(|u| (u, SocketAddrV4::new(raddr.ip.into(), raddr.port)))
     }
 
+    pub fn read_from_timeout(
+        &self,
+        to: std::time::Duration,
+        buf: &mut [u8],
+    ) -> io::Result<(usize, SocketAddrV4)> {
+        let to_usecs = to.as_micros();
+        let mut raddr = ffi::netaddr { ip: 0, port: 0 };
+        isize_to_result(unsafe {
+            ffi::udp_read_from_timeout(
+                self.0,
+                buf.as_mut_ptr() as *mut c_void,
+                buf.len(),
+                &mut raddr as *mut _,
+                to_usecs as _,
+            )
+        })
+        .map(|u| (u, SocketAddrV4::new(raddr.ip.into(), raddr.port)))
+    }
+
     pub fn write_to(&self, buf: &[u8], remote_addr: SocketAddrV4) -> io::Result<usize> {
         let mut raddr = ffi::netaddr {
             ip: NetworkEndian::read_u32(&remote_addr.ip().octets()),
