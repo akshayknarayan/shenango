@@ -1,6 +1,6 @@
-use Connection;
-use Packet;
-use Transport;
+use crate::Connection;
+use crate::Packet;
+use crate::Transport;
 
 use byteorder::{BigEndian, WriteBytesExt};
 use dns_parser::{Header, Opcode, QueryClass, QueryType, ResponseCode};

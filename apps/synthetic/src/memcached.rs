@@ -2,9 +2,9 @@ use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use std::io;
 use std::io::{Error, ErrorKind, Read};
 
-use Connection;
-use Packet;
-use Transport;
+use crate::Connection;
+use crate::Packet;
+use crate::Transport;
 
 /** Packet code from https://github.com/aisk/rust-memcache **/
 

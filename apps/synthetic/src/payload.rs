@@ -1,4 +1,4 @@
-use Packet;
+use crate::Packet;
 
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use std::io;
@@ -9,8 +9,8 @@ pub struct Payload {
     pub index: u64,
 }
 
-use Connection;
-use Transport;
+use crate::Connection;
+use crate::Transport;
 
 #[derive(Clone, Copy)]
 pub struct SyntheticProtocol;

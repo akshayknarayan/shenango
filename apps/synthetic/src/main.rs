@@ -31,10 +31,10 @@ use rand::Rng;
 use shenango::udp::UdpSpawner;
 
 mod backend;
-use backend::*;
+use crate::backend::*;
 
 mod payload;
-use payload::{Payload, SyntheticProtocol};
+use crate::payload::{Payload, SyntheticProtocol};
 
 #[derive(Default)]
 pub struct Packet {
@@ -47,13 +47,13 @@ pub struct Packet {
 }
 
 mod fakework;
-use fakework::FakeWorker;
+use crate::fakework::FakeWorker;
 
 mod memcached;
-use memcached::MemcachedProtocol;
+use crate::memcached::MemcachedProtocol;
 
 mod dns;
-use dns::DnsProtocol;
+use crate::dns::DnsProtocol;
 
 #[derive(Copy, Clone, Debug)]
 enum Distribution {
@@ -144,7 +144,7 @@ enum OutputMode {
 }}
 
 fn duration_to_ns(duration: Duration) -> u64 {
-    (duration.as_secs() * 1000_000_000 + duration.subsec_nanos() as u64)
+    duration.as_secs() * 1000_000_000 + duration.subsec_nanos() as u64
 }
 
 fn run_linux_udp_server(backend: Backend, addr: SocketAddrV4, nthreads: usize, worker: FakeWorker) {

@@ -2,6 +2,7 @@
 name = "synthetic"
 version = "0.1.0"
 authors = ["The Shenango Developers"]
+edition = "2018"
 
 [dependencies]
 byteorder = "1"
