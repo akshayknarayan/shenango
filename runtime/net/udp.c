@@ -2,6 +2,7 @@
  * udp.c - support for User Datagram Protocol (UDP)
  */
 
+#include <stdio.h>
 #include <string.h>
 
 #include <base/hash.h>
@@ -12,6 +13,7 @@
 #include <runtime/sync.h>
 #include <runtime/thread.h>
 #include <runtime/udp.h>
+#include <runtime/timer.h>
 
 #include "defs.h"
 #include "waitq.h"
@@ -74,6 +76,7 @@ static void udp_conn_recv(struct trans_entry *e, struct mbuf *m)
 	spin_lock_np(&c->inq_lock);
 	/* drop packet if the ingress queue is full */
 	if (c->inq_len >= c->inq_cap || c->inq_err || c->shutdown) {
+        printf("dropping packet\n");
 		spin_unlock_np(&c->inq_lock);
 		mbuf_drop(m);
 		return;
@@ -196,6 +199,7 @@ int udp_listen(struct netaddr laddr, udpconn_t **c_out)
 	udpconn_t *c;
 	int ret;
 
+    printf("udp_listen\n");
 	/* only can support one local IP so far */
 	if (laddr.ip == 0)
 		laddr.ip = netcfg.addr;
@@ -315,6 +319,17 @@ ssize_t udp_read_from(udpconn_t *c, void *buf, size_t len,
 	return ret;
 }
 
+// signal the waitq to wake up.
+void udp_handle_read_timeout(unsigned long c_ptr) {
+    if (c_ptr == 0) {
+        return;
+    }
+
+    printf("udp timed out\n");
+    udpconn_t *c = (udpconn_t*) c_ptr;
+    waitq_signal_locked(&c->inq_wq, &c->inq_lock);
+}
+
 /**
  * udp_read_from_timeout - reads from a UDP socket
  * @c: the UDP socket
@@ -335,20 +350,26 @@ ssize_t udp_read_from_timeout(udpconn_t *c, void *buf, size_t len,
 	ssize_t ret;
 	struct mbuf *m;
     uint64_t start, now;
+    struct timer_entry te;
+    timer_init(&te, &udp_handle_read_timeout, (unsigned long) c);
 
 	spin_lock_np(&c->inq_lock);
 
     start = microtime();
+    timer_start(&te, start + timeout);
 	/* block until there is an actionable event */
 	while (mbufq_empty(&c->inq) && !c->inq_err && !c->shutdown) {
         now = microtime();
         if ((now - start) > timeout) {
             spin_unlock_np(&c->inq_lock);
+            printf("udp timeout\n");
             return 0;
         }
 
 		waitq_wait(&c->inq_wq, &c->inq_lock);
     }
+
+    timer_cancel(&te);
 
 	/* is the socket drained and shutdown? */
 	if (mbufq_empty(&c->inq) && c->shutdown) {
