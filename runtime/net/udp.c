@@ -363,7 +363,7 @@ ssize_t udp_read_from_timeout(udpconn_t *c, void *buf, size_t len,
         if ((now - start) > timeout) {
             spin_unlock_np(&c->inq_lock);
             printf("udp timeout\n");
-            return 0;
+            return -1;
         }
 
 		waitq_wait(&c->inq_wq, &c->inq_lock);
