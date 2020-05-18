@@ -61,9 +61,9 @@ impl UdpConnection {
             ffi::udp_read_from(
                 self.0,
                 buf.as_mut_ptr() as *mut c_void,
-                buf.len(),
+                buf.len() as _,
                 &mut raddr as *mut _,
-            )
+            ) as _
         })
         .map(|u| (u, SocketAddrV4::new(raddr.ip.into(), raddr.port)))
     }
@@ -79,10 +79,10 @@ impl UdpConnection {
             ffi::udp_read_from_timeout(
                 self.0,
                 buf.as_mut_ptr() as *mut c_void,
-                buf.len(),
+                buf.len() as _,
                 &mut raddr as *mut _,
                 to_usecs as _,
-            )
+            ) as _
         })
         .map(|u| (u, SocketAddrV4::new(raddr.ip.into(), raddr.port)))
     }
@@ -96,21 +96,23 @@ impl UdpConnection {
             ffi::udp_write_to(
                 self.0,
                 buf.as_ptr() as *const c_void as *mut c_void,
-                buf.len(),
+                buf.len() as _,
                 &mut raddr as *mut _,
-            )
+            ) as _
         })
     }
 
     /// Same as read, but doesn't take a &mut self.
     pub fn recv(&self, buf: &mut [u8]) -> io::Result<usize> {
         isize_to_result(unsafe {
-            ffi::udp_read(self.0, buf.as_mut_ptr() as *mut c_void, buf.len())
+            ffi::udp_read(self.0, buf.as_mut_ptr() as *mut c_void, buf.len() as _) as _
         })
     }
     /// Same as write, but doesn't take a &mut self.
     pub fn send(&self, buf: &[u8]) -> io::Result<usize> {
-        isize_to_result(unsafe { ffi::udp_write(self.0, buf.as_ptr() as *const c_void, buf.len()) })
+        isize_to_result(unsafe {
+            ffi::udp_write(self.0, buf.as_ptr() as *const c_void, buf.len() as _) as _
+        })
     }
 
     pub fn local_addr(&self) -> SocketAddrV4 {
@@ -131,7 +133,7 @@ impl UdpConnection {
 impl Read for UdpConnection {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         isize_to_result(unsafe {
-            ffi::udp_read(self.0, buf.as_mut_ptr() as *mut c_void, buf.len())
+            ffi::udp_read(self.0, buf.as_mut_ptr() as *mut c_void, buf.len() as _) as _
         })
     }
 }
@@ -139,14 +141,16 @@ impl Read for UdpConnection {
 impl<'a> Read for &'a UdpConnection {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         isize_to_result(unsafe {
-            ffi::udp_read(self.0, buf.as_mut_ptr() as *mut c_void, buf.len())
+            ffi::udp_read(self.0, buf.as_mut_ptr() as *mut c_void, buf.len() as _) as _
         })
     }
 }
 
 impl Write for UdpConnection {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        isize_to_result(unsafe { ffi::udp_write(self.0, buf.as_ptr() as *const c_void, buf.len()) })
+        isize_to_result(unsafe {
+            ffi::udp_write(self.0, buf.as_ptr() as *const c_void, buf.len() as _) as _
+        })
     }
 
     fn flush(&mut self) -> io::Result<()> {
@@ -156,7 +160,9 @@ impl Write for UdpConnection {
 
 impl<'a> Write for &'a UdpConnection {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        isize_to_result(unsafe { ffi::udp_write(self.0, buf.as_ptr() as *const c_void, buf.len()) })
+        isize_to_result(unsafe {
+            ffi::udp_write(self.0, buf.as_ptr() as *const c_void, buf.len() as _) as _
+        })
     }
 
     fn flush(&mut self) -> io::Result<()> {
@@ -198,10 +204,10 @@ impl UdpSpawner {
     pub unsafe fn reply(d: *mut ffi::udp_spawn_data, buf: &[u8]) -> io::Result<usize> {
         isize_to_result(ffi::udp_send(
             buf.as_ptr() as *const c_void,
-            buf.len(),
+            buf.len() as _,
             (*d).laddr,
             (*d).raddr,
-        ))
+        ) as _)
     }
 
     pub unsafe fn release_data(d: *mut ffi::udp_spawn_data) {

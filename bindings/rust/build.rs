@@ -4,6 +4,8 @@ use std::env;
 use std::path::PathBuf;
 
 fn main() {
+    println!("cargo:rerun-if-changed=../../base/**");
+    println!("cargo:rerun-if-changed=../../runtime/**");
     // Tell cargo to tell rustc to link the library.
     println!("cargo:rustc-link-lib=static=base");
     println!("cargo:rustc-link-lib=static=net");
