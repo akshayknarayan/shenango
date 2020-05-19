@@ -210,7 +210,6 @@ bool timer_cancel(struct timer_entry *e)
 try_again:
 	preempt_disable();
 	k = load_acquire(&e->localk);
-    assert_timer_heap_is_valid(k);
 
 	spin_lock_np(&k->timer_lock);
 
@@ -220,6 +219,8 @@ try_again:
 		preempt_enable();
 		goto try_again;
 	}
+
+    //assert_timer_heap_is_valid(k);
 
 	if (!e->armed) {
 		spin_unlock_np(&k->timer_lock);
@@ -312,6 +313,7 @@ void timer_softirq(struct kthread *k, unsigned int budget)
 			k->timers[0].e->idx = 0;
 			sift_down(k->timers, 0, i);
 		}
+        e->armed = false;
 		spin_unlock_np(&k->timer_lock);
 
 		/* execute the timer handler */
