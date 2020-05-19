@@ -351,9 +351,9 @@ ssize_t udp_read_from_timeout(udpconn_t *c, void *buf, size_t len,
 	struct mbuf *m;
     uint64_t start, now;
     struct timer_entry te;
-    timer_init(&te, &udp_handle_read_timeout, (unsigned long) c);
 
 	spin_lock_np(&c->inq_lock);
+    timer_init(&te, &udp_handle_read_timeout, (unsigned long) c);
 
     start = microtime();
     timer_start(&te, start + timeout);

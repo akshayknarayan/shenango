@@ -191,6 +191,7 @@ void timer_start(struct timer_entry *e, uint64_t deadline_us)
 
 	spin_lock_np(&k->timer_lock);
 	timer_start_locked(e, deadline_us);
+    assert_timer_heap_is_valid(k);
 	spin_unlock_np(&k->timer_lock);
 	putk();
 }
@@ -206,10 +207,10 @@ bool timer_cancel(struct timer_entry *e)
 {
 	struct kthread *k;
 	int last;
-
 try_again:
 	preempt_disable();
 	k = load_acquire(&e->localk);
+    assert_timer_heap_is_valid(k);
 
 	spin_lock_np(&k->timer_lock);
 
@@ -227,6 +228,8 @@ try_again:
 	}
 	e->armed = false;
 
+    // if there is an armed timer (e) but no timer entries, then bug.
+    BUG_ON(k->timern == 0);
 	last = --k->timern;
 	if (e->idx == last) {
 		spin_unlock_np(&k->timer_lock);
