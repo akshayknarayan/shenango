@@ -17,24 +17,30 @@ void timeout_handler(unsigned long _c) {
 	log_info("timeout expired");
 }
 
-static void work_handler(void *args)
+static void work_handler(void *arg)
 {
     struct timer_entry te;
+	waitgroup_t *wg_parent = (waitgroup_t *)arg;
 
     timer_init(&te, &timeout_handler, 0);
     timer_start(&te, microtime() + 1000);
     timer_sleep(1001);
     timer_cancel(&te);
+
+	waitgroup_done(wg_parent);
 }
 
 static void main_handler(void *arg)
 {
     int i;
+	waitgroup_t wg;
+	waitgroup_add(&wg, WORKERS);
 	log_info("started main_handler() thread");
     for (i = 0; i < WORKERS; i++) {
-        thread_spawn(&work_handler, NULL);
+        thread_spawn(&work_handler, &wg);
     }
 
+	waitgroup_wait(&wg);
 	log_info("done");
 }
 
