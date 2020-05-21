@@ -76,7 +76,7 @@ static void udp_conn_recv(struct trans_entry *e, struct mbuf *m)
 	spin_lock_np(&c->inq_lock);
 	/* drop packet if the ingress queue is full */
 	if (c->inq_len >= c->inq_cap || c->inq_err || c->shutdown) {
-        printf("dropping packet\n");
+        //printf("dropping packet\n");
 		spin_unlock_np(&c->inq_lock);
 		mbuf_drop(m);
 		return;
@@ -325,7 +325,7 @@ void udp_handle_read_timeout(unsigned long c_ptr) {
         return;
     }
 
-    printf("udp timed out\n");
+    //printf("udp timed out\n");
     udpconn_t *c = (udpconn_t*) c_ptr;
     waitq_signal_locked(&c->inq_wq, &c->inq_lock);
 }
@@ -362,7 +362,7 @@ ssize_t udp_read_from_timeout(udpconn_t *c, void *buf, size_t len,
         now = microtime();
         if ((now - start) > timeout) {
             spin_unlock_np(&c->inq_lock);
-            printf("udp timeout\n");
+            //printf("udp timeout\n");
             return -1;
         }
 
