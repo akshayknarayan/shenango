@@ -1,3 +1,5 @@
+use std::llvm_asm as asm;
+
 #[inline]
 pub fn cpu_relax() {
     unsafe { asm!("pause" :::: "volatile") }

@@ -1,13 +1,14 @@
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
-#![feature(asm)]
+#![feature(llvm_asm)]
 #![feature(thread_local)]
 
 extern crate byteorder;
 
 use std::cell::UnsafeCell;
 use std::ffi::CString;
+use std::llvm_asm as asm;
 use std::mem;
 use std::os::raw::{c_int, c_void};
 use std::sync::atomic::{AtomicI32, Ordering};
