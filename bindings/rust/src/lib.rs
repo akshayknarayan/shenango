@@ -2,7 +2,6 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![feature(asm)]
-#![feature(integer_atomics)]
 #![feature(thread_local)]
 
 extern crate byteorder;
@@ -97,9 +96,11 @@ pub struct WaitGroup {
 }
 impl WaitGroup {
     pub fn new() -> Self {
-        let inner = Arc::new(UnsafeCell::new(unsafe { std::mem::uninitialized() }));
-        unsafe { ffi::waitgroup_init(inner.get() as *mut _) };
-        Self { inner }
+        let mut wg = mem::MaybeUninit::uninit();
+        unsafe { ffi::waitgroup_init(wg.as_mut_ptr()) };
+        Self {
+            inner: Arc::new(UnsafeCell::new(unsafe { wg.assume_init() })),
+        }
     }
     pub fn add(&self, count: i32) {
         unsafe { ffi::waitgroup_add(self.inner.get() as *const _ as *mut _, count as c_int) }
