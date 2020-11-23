@@ -7,6 +7,23 @@ as every 5 microseconds.
 
 ## How to Run Shenango
 
+```
+apt install libnuma-dev libibverbs-dev
+```
+
+`shenango/dpdk/mk/toolchain/gcc/rte.vars.mk`: Add these lines
+```
+WERROR_FLAGS += -Wno-address-of-packed-member -Wno-format-overflow -Wno-maybe-uninitialized
+WERROR_FLAGS += -Wno-implicit-fallthrough
+```
+
+`kernel/linux/igb_uio/Makefile`: Add these lines
+```
+MODULE_CFLAGS += -Wno-implicit-fallthrough
+```
+
+Future: update to dpdk 19.11 with patch: https://github.com/shenango/caladan/commit/9cf53053486d3fffc41431ea0b728bc708ba8122
+
 1) Clone the Shenango repository.
 
 ```
