@@ -306,6 +306,15 @@ int arp_lookup(uint32_t daddr, struct eth_addr *dhost_out, struct mbuf *m)
 	struct arp_entry *e, *newe = NULL;
 	int idx = hash_ip(daddr);
 
+    /* TODO remove Hardcode arp entry */
+    // 10.1.1.2 -> f4:52:14:76:98:10
+    struct eth_addr daddr_mac1 = { .addr = { 0xf4, 0x52, 0x14, 0x76, 0x98, 0x10 } };
+	arp_update(167837954, daddr_mac1);
+    // 10.1.1.6 -> f4:52:14:76:98:a0
+    struct eth_addr daddr_mac2 = { .addr = { 0xf4, 0x52, 0x14, 0x76, 0x98, 0xa0 } };
+	arp_update(167837958, daddr_mac2);
+    /* end debugging */
+
 	/* hot-path: @daddr hits in ARP cache */
 	rcu_read_lock();
 	e = lookup_entry(idx, daddr);
