@@ -199,7 +199,6 @@ int udp_listen(struct netaddr laddr, udpconn_t **c_out)
 	udpconn_t *c;
 	int ret;
 
-    printf("udp_listen\n");
 	/* only can support one local IP so far */
 	if (laddr.ip == 0)
 		laddr.ip = netcfg.addr;
