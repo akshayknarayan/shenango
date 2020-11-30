@@ -109,8 +109,8 @@ int trans_table_add_with_ephemeral_port(struct trans_entry *e)
 	uint16_t num_ephemeral = MAX_EPHEMERAL - MIN_EPHEMERAL + 1;
 	int ret;
 
-	if (e->match != TRANS_MATCH_5TUPLE)
-		return -EINVAL;
+	assert(e->match == TRANS_MATCH_3TUPLE ||
+	       e->match == TRANS_MATCH_5TUPLE);
 
 	e->laddr.port = 0;
 	offset = trans_hash_5tuple(e->proto, e->laddr, e->raddr) +

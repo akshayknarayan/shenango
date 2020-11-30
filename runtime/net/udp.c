@@ -188,6 +188,44 @@ int udp_dial(struct netaddr laddr, struct netaddr raddr, udpconn_t **c_out)
 }
 
 /**
+ * udp_socket - creates a UDP socket listening on an ephemeral port
+ * @laddr: the local UDP address
+ * @c_out: a pointer to store the UDP socket (if successful)
+ *
+ * Returns 0 if success, otherwise fail.
+ */
+int udp_socket(struct netaddr laddr, udpconn_t **c_out)
+{
+	udpconn_t *c;
+	int ret;
+
+	/* only can support one local IP so far */
+	if (laddr.ip == 0)
+		laddr.ip = netcfg.addr;
+	else if (laddr.ip != netcfg.addr)
+		return -EINVAL;
+
+	c = smalloc(sizeof(*c));
+	if (!c)
+		return -ENOMEM;
+
+	udp_init_conn(c);
+	trans_init_3tuple(&c->e, IPPROTO_UDP, &udp_conn_ops, laddr);
+
+	if (laddr.port == 0)
+		ret = trans_table_add_with_ephemeral_port(&c->e);
+	else
+		ret = trans_table_add(&c->e);
+	if (ret) {
+		sfree(c);
+		return ret;
+	}
+
+	*c_out = c;
+	return 0;
+}
+
+/**
  * udp_listen - creates a UDP socket listening to a local address
  * @laddr: the local UDP address
  * @c_out: a pointer to store the UDP socket (if successful)

@@ -22,6 +22,7 @@ typedef struct udpconn udpconn_t;
 
 extern int udp_dial(struct netaddr laddr, struct netaddr raddr,
 		    udpconn_t **c_out);
+extern int udp_socket(struct netaddr laddr, udpconn_t **c_out);
 extern int udp_listen(struct netaddr laddr, udpconn_t **c_out);
 extern struct netaddr udp_local_addr(udpconn_t *c);
 extern struct netaddr udp_remote_addr(udpconn_t *c);

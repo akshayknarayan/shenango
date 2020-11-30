@@ -35,6 +35,21 @@ impl UdpConnection {
         }
     }
 
+    pub fn new(local_addr: SocketAddrV4) -> io::Result<Self> {
+        let laddr = ffi::netaddr {
+            ip: NetworkEndian::read_u32(&local_addr.ip().octets()),
+            port: local_addr.port(),
+        };
+
+        let mut conn = ptr::null_mut();
+        let ret = unsafe { ffi::udp_socket(laddr, &mut conn as *mut _) };
+        if ret < 0 {
+            Err(io::Error::from_raw_os_error(ret as i32))
+        } else {
+            Ok(UdpConnection(conn))
+        }
+    }
+
     pub fn listen(local_addr: SocketAddrV4) -> io::Result<Self> {
         let laddr = ffi::netaddr {
             ip: NetworkEndian::read_u32(&local_addr.ip().octets()),
